@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -36,351 +37,94 @@
           },
           borderRadius: { pill: '20px' },
           boxShadow: {
-            'purple-glow':    '0 0 16px rgba(168,85,247,0.35)',
+            'purple-glow': '0 0 16px rgba(168,85,247,0.35)',
             'purple-glow-lg': '0 0 24px rgba(168,85,247,0.6)',
+          },
+          keyframes: {
+            fadeInUp: {
+              from: { opacity: '0', transform: 'translateY(20px)' },
+              to:   { opacity: '1', transform: 'translateY(0)' },
+            },
+            spinSlow: { to: { transform: 'rotate(360deg)' } },
+            shimmer: {
+              '0%':   { backgroundPosition: '200% 0' },
+              '100%': { backgroundPosition: '-200% 0' },
+            },
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+            'spin-slow':  'spinSlow 8s linear infinite',
+            'shimmer':    'shimmer 1.5s infinite',
           },
         }
       }
     }
   </script>
 
-  <!-- Site CSS -->
-  <link rel="stylesheet" href="style.css">
-
   <style>
-    /* ════════════════════════════════
-       HERO SLIDER
-    ════════════════════════════════ */
-    .hero-slider {
-      position: relative;
-      width: 100%;
-      height: min(560px, 88vw);
-      overflow: hidden;
-      background: #0a0a0f;
-    }
-    @media (max-width: 480px) { .hero-slider { height: 94vw; } }
+    /* Scrollbar */
+    html { scrollbar-width: thin; scrollbar-color: #7c3aed #0a0a0f; scroll-behavior: smooth; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 10px; }
 
-    /* Slides */
-    .hs-slide {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: flex-end;
-      opacity: 0;
-      transform: scale(1.05) translateX(36px);
-      transition: opacity .65s ease, transform .65s ease;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .hs-slide.active  { opacity:1; transform:scale(1) translateX(0); pointer-events:auto; z-index:1; }
-    .hs-slide.exit    { opacity:0; transform:scale(.97) translateX(-36px); z-index:2; }
-
-    /* BG */
-    .hs-bg {
-      position: absolute; inset: 0;
-      background-size: cover;
-      background-position: center top;
-    }
-    .hs-slide.active .hs-bg { animation: hszoom 8s ease forwards; }
-    @keyframes hszoom { from{transform:scale(1)} to{transform:scale(1.07)} }
-
-    /* Overlay */
-    .hs-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(to top,
-        rgba(0,0,0,.97)  0%,
-        rgba(0,0,0,.50) 45%,
-        rgba(0,0,0,.12) 100%);
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: 0.4;
     }
 
-    /* Purple left accent */
-    .hs-slide::before {
-      content:''; position:absolute; left:0; top:0; bottom:0;
-      width:4px; background:#a855f7; z-index:5;
-      transform:scaleY(0); transform-origin:bottom;
-      transition:transform .5s .3s ease;
-    }
-    .hs-slide.active::before { transform:scaleY(1); }
+    /* Font defaults */
+    body { font-family: 'Rajdhani', sans-serif; }
+    .font-display { font-family: 'Orbitron', sans-serif; }
 
-    /* Content */
-    .hs-content {
-      position:relative; z-index:3;
-      padding: 0 clamp(16px,5vw,52px) clamp(22px,5vw,44px);
-      width:100%; max-width:740px;
-    }
+    /* Hamburger active */
+    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    .hs-tag {
-      display:inline-flex; align-items:center; gap:6px;
-      background:#a855f7; color:#fff;
-      font-family:'Rajdhani',sans-serif;
-      font-size:clamp(10px,2.4vw,13px); font-weight:700;
-      letter-spacing:.12em; text-transform:uppercase;
-      padding:4px 11px; border-radius:3px; margin-bottom:9px;
-      opacity:0; transform:translateY(12px);
-      transition:opacity .4s .4s, transform .4s .4s;
-    }
-    .hs-slide.active .hs-tag { opacity:1; transform:none; }
-    .hs-tag .blink {
-      width:6px; height:6px; border-radius:50%; background:#fff;
-      animation:hsblink 1.2s infinite;
-    }
-    @keyframes hsblink { 0%,100%{opacity:1} 50%{opacity:.25} }
+    /* Drawer */
+    .drawer { transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .drawer.open { transform: translateX(0); }
+    .drawer-overlay { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
 
-    .hs-title {
-      font-family:'Bebas Neue',sans-serif;
-      font-size:clamp(26px,7.5vw,60px);
-      line-height:1.03; letter-spacing:.03em;
-      color:#fff; margin-bottom:9px;
-      text-shadow:0 2px 20px rgba(0,0,0,.6);
-      opacity:0; transform:translateY(18px);
-      transition:opacity .5s .5s, transform .5s .5s;
-    }
-    .hs-slide.active .hs-title { opacity:1; transform:none; }
-    .hs-title span { color:#c084fc; }
+    /* Modal */
+    .modal-overlay { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-overlay .modal-box { transform: scale(0.9) translateY(20px); transition: transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
 
-    .hs-desc {
-      font-family:'Rajdhani',sans-serif;
-      font-size:clamp(12px,3.2vw,15px); color:#ccc8ee;
-      line-height:1.55; max-width:480px; margin-bottom:18px;
-      opacity:0; transform:translateY(14px);
-      transition:opacity .5s .6s, transform .5s .6s;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-    }
-    .hs-slide.active .hs-desc { opacity:1; transform:none; }
+    /* Mobile search bar */
+    .mobile-search-bar { transform: translateY(-100%); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; display: none; }
+    .mobile-search-bar.open { transform: translateY(0); opacity: 1; }
 
-    .hs-actions {
-      display:flex; gap:10px; flex-wrap:wrap;
-      opacity:0; transform:translateY(10px);
-      transition:opacity .4s .72s, transform .4s .72s;
-    }
-    .hs-slide.active .hs-actions { opacity:1; transform:none; }
+    /* Card line clamp */
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-    .hs-btn {
-      font-family:'Rajdhani',sans-serif; font-weight:700;
-      font-size:clamp(12px,3vw,14px); letter-spacing:.08em;
-      text-transform:uppercase; padding:10px 22px;
-      border:none; cursor:pointer; border-radius:3px;
-      text-decoration:none; display:inline-flex; align-items:center; gap:6px;
-      transition:transform .18s, box-shadow .18s, background .18s;
-    }
-    .hs-btn-primary {
-      background:#a855f7; color:#fff;
-      box-shadow:0 4px 18px rgba(168,85,247,.45);
-    }
-    .hs-btn-primary:hover { background:#9333ea; transform:translateY(-2px); box-shadow:0 6px 22px rgba(168,85,247,.6); }
-    .hs-btn-ghost {
-      background:rgba(255,255,255,.08); color:#fff;
-      border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(6px);
-    }
-    .hs-btn-ghost:hover { background:rgba(255,255,255,.16); transform:translateY(-2px); }
-
-    /* Badge top-right */
-    .hs-badge {
-      position:absolute; top:clamp(12px,3vw,20px); right:clamp(12px,3vw,20px);
-      z-index:4; background:rgba(0,0,0,.72); border:1px solid rgba(255,255,255,.12);
-      backdrop-filter:blur(8px); border-radius:4px; padding:5px 12px;
-      font-family:'Rajdhani',sans-serif;
-      font-size:clamp(10px,2.4vw,12px); font-weight:700;
-      letter-spacing:.1em; text-transform:uppercase; color:#c084fc;
-      opacity:0; transform:translateY(-8px);
-      transition:opacity .4s .48s, transform .4s .48s;
-    }
-    .hs-slide.active .hs-badge { opacity:1; transform:none; }
-
-    /* Progress bar */
-    .hs-progress {
-      position:absolute; bottom:0; left:0; height:3px;
-      background:#a855f7; width:0%; z-index:10;
-      transition:width linear;
-    }
-
-    /* Slide count */
-    .hs-count {
-      position:absolute; top:clamp(12px,3vw,20px); left:clamp(16px,4vw,28px);
-      z-index:10; font-family:'Bebas Neue',sans-serif;
-      font-size:clamp(13px,3.5vw,18px); letter-spacing:.1em;
-      color:rgba(255,255,255,.45);
-    }
-    .hs-count .cur { color:#a855f7; font-size:1.4em; line-height:1; }
-
-    /* Dots */
-    .hs-dots {
-      position:absolute; bottom:clamp(14px,4vw,26px); left:50%;
-      transform:translateX(-50%); z-index:10;
-      display:flex; gap:8px; align-items:center;
-    }
-    .hs-dot {
-      width:8px; height:8px; border-radius:50%; border:none;
-      background:rgba(255,255,255,.28); cursor:pointer; padding:0;
-      transition:background .25s, width .25s;
-    }
-    .hs-dot.active { background:#a855f7; width:24px; border-radius:4px; }
-
-    /* Arrow controls */
-    .hs-controls {
-      position:absolute; bottom:clamp(14px,4vw,26px); right:clamp(12px,4vw,28px);
-      z-index:10; display:flex; align-items:center; gap:8px;
-    }
-    .hs-ctrl {
-      width:38px; height:38px; border-radius:50%;
-      border:1.5px solid rgba(255,255,255,.18);
-      background:rgba(0,0,0,.55); backdrop-filter:blur(8px);
-      color:#fff; cursor:pointer; display:grid; place-items:center;
-      transition:background .18s, border-color .18s, transform .18s;
-    }
-    .hs-ctrl:hover { background:#a855f7; border-color:#a855f7; transform:scale(1.1); }
-
-    /* ════════════════════════════════
-       SON HABERLER SECTION
-    ════════════════════════════════ */
-    .son-haberler {
-      max-width:1280px; margin:0 auto; padding:48px 20px 64px;
-    }
-    .son-haberler-header {
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:28px; flex-wrap:wrap; gap:12px;
-    }
-    .son-haberler-title {
-      font-family:'Orbitron',sans-serif;
-      font-size:clamp(16px,3.5vw,22px); font-weight:900;
-      letter-spacing:.15em; text-transform:uppercase; color:#fff;
-    }
-    .son-haberler-title span { color:#a855f7; }
-    .son-haberler-all {
-      font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
-      letter-spacing:.1em; text-transform:uppercase; color:#a855f7;
-      border:1px solid rgba(168,85,247,.4); border-radius:20px;
-      padding:7px 18px; text-decoration:none;
-      transition:background .18s, color .18s, border-color .18s;
-      white-space:nowrap;
-    }
-    .son-haberler-all:hover { background:#a855f7; color:#fff; border-color:#a855f7; }
-
-    /* Cards grid */
-    .haber-grid {
-      display:grid;
-      grid-template-columns:repeat(auto-fill, minmax(270px,1fr));
-      gap:18px;
-    }
-    @media(max-width:600px) {
-      .haber-grid { grid-template-columns:1fr; }
-    }
-
-    /* Haber kartı */
-    .haber-kart {
-      background:#0a0a0f; border:1px solid rgba(168,85,247,.15);
-      border-radius:10px; overflow:hidden; cursor:pointer;
-      transition:transform .22s, border-color .22s, box-shadow .22s;
-      display:flex; flex-direction:column;
-      opacity:0; animation:hkfade .45s ease forwards;
-    }
-    @keyframes hkfade { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-    .haber-kart:hover {
-      transform:translateY(-4px);
-      border-color:rgba(168,85,247,.45);
-      box-shadow:0 8px 32px rgba(168,85,247,.18);
-    }
-
-    .haber-kart-img {
-      position:relative; aspect-ratio:16/9; overflow:hidden;
-    }
-    .haber-kart-img img {
-      width:100%; height:100%; object-fit:cover;
-      transition:transform .5s ease;
-    }
-    .haber-kart:hover .haber-kart-img img { transform:scale(1.06); }
-    .haber-kart-img-overlay {
-      position:absolute; inset:0;
-      background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 60%);
-    }
-    .haber-kart-tarih-badge {
-      position:absolute; bottom:8px; left:10px;
-      background:rgba(168,85,247,.85); backdrop-filter:blur(4px);
-      border-radius:3px; padding:3px 9px;
-      font-family:'Rajdhani',sans-serif;
-      font-size:11px; font-weight:700; letter-spacing:.08em;
-      color:#fff; text-transform:uppercase;
-    }
-
-    .haber-kart-body {
-      padding:16px 16px 14px; flex:1; display:flex; flex-direction:column; gap:8px;
-    }
-    .haber-kart-baslik {
-      font-family:'Rajdhani',sans-serif; font-size:clamp(14px,2.5vw,16px);
-      font-weight:700; color:#f0eeff; line-height:1.38;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-    }
-    .haber-kart-desc {
-      font-family:'Rajdhani',sans-serif; font-size:13px; color:rgba(255,255,255,.5);
-      line-height:1.5;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-      flex:1;
-    }
-    .haber-kart-footer {
-      display:flex; align-items:center; justify-content:space-between;
-      margin-top:4px;
-    }
-    .haber-kart-date {
-      font-family:'Rajdhani',sans-serif; font-size:12px;
-      color:rgba(255,255,255,.35); display:flex; align-items:center; gap:4px;
-    }
-    .haber-kart-btn {
-      font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700;
-      letter-spacing:.08em; text-transform:uppercase;
-      background:rgba(168,85,247,.15); border:1px solid rgba(168,85,247,.35);
-      color:#c084fc; border-radius:4px; padding:5px 13px;
-      text-decoration:none; cursor:pointer;
-      transition:background .18s, color .18s, border-color .18s;
-      white-space:nowrap;
-    }
-    .haber-kart-btn:hover { background:#a855f7; color:#fff; border-color:#a855f7; }
-
-    /* Skeleton */
-    .haber-kart-skeleton {
-      background:#0a0a0f; border:1px solid rgba(168,85,247,.1);
-      border-radius:10px; overflow:hidden;
-    }
-    .sk {
-      background:linear-gradient(90deg,#0f0f18 0%,#1a1a28 50%,#0f0f18 100%);
-      background-size:200% 100%; animation:sksh 1.4s infinite; border-radius:4px;
-    }
-    @keyframes sksh { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-    /* ════════════════════════════════
-       COMING SOON SECTION
-    ════════════════════════════════ */
+    /* Mascot spin ring */
     .mascot-ring::after {
-      content:''; position:absolute; inset:-8px; border-radius:50%;
-      border:1px solid rgba(168,85,247,.2);
-      animation:spinSlow 8s linear infinite;
+      content: '';
+      position: absolute; inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(168,85,247,0.2);
+      animation: spinSlow 8s linear infinite;
     }
-    @keyframes spinSlow { to{transform:rotate(360deg)} }
+    @keyframes spinSlow { to { transform: rotate(360deg); } }
     @keyframes fadeInUp {
-      from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .animate-in { animation:fadeInUp .5s ease-out forwards; }
+    .animate-in { animation: fadeInUp 0.5s ease-out forwards; }
 
-    /* Shared */
-    .hamburger.active span:nth-child(1){transform:translateY(7px) rotate(45deg)}
-    .hamburger.active span:nth-child(2){opacity:0;transform:scaleX(0)}
-    .hamburger.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-    .drawer{transform:translateX(-100%);transition:transform .4s cubic-bezier(.25,.46,.45,.94)}
-    .drawer.open{transform:translateX(0)}
-    .drawer-overlay{opacity:0;pointer-events:none;transition:opacity .3s}
-    .drawer-overlay.open{opacity:1;pointer-events:all}
-    .modal-overlay{opacity:0;pointer-events:none;transition:opacity .3s}
-    .modal-overlay.open{opacity:1;pointer-events:all}
-    .modal-overlay .modal-box{transform:scale(.9) translateY(20px);transition:transform .3s cubic-bezier(.25,.46,.45,.94)}
-    .modal-overlay.open .modal-box{transform:scale(1) translateY(0)}
-    .mobile-search-bar{transform:translateY(-100%);opacity:0;transition:transform .3s ease,opacity .3s ease;display:none}
-    .mobile-search-bar.open{transform:translateY(0);opacity:1}
-    html{scrollbar-width:thin;scrollbar-color:#7c3aed #0a0a0f;scroll-behavior:smooth}
-    ::-webkit-scrollbar{width:5px}
-    ::-webkit-scrollbar-track{background:#0a0a0f}
-    ::-webkit-scrollbar-thumb{background:#7c3aed;border-radius:10px}
-    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4}
-    body{font-family:'Rajdhani',sans-serif}
-    @media(max-width:768px){.mobile-search-bar{display:block}.hide-mobile{display:none!important}.show-mobile-flex{display:flex!important}}
+    @media (max-width: 768px) {
+      .mobile-search-bar { display: block; }
+      .hide-mobile { display: none !important; }
+      .show-mobile-flex { display: flex !important; }
+    }
   </style>
 </head>
 <body class="bg-black text-white overflow-x-hidden min-h-screen">
@@ -390,7 +134,7 @@
 
   <!-- DRAWER -->
   <aside id="drawer" class="drawer fixed top-0 left-0 bottom-0 w-[80%] max-w-xs min-w-[260px] z-[1200] flex flex-col overflow-hidden border-r border-purple/20"
-    style="background:linear-gradient(180deg,#0a0010 0%,#050008 100%)">
+    style="background: linear-gradient(180deg,#0a0010 0%,#050008 100%)">
     <div class="flex items-center h-16 px-5 border-b border-purple/20 gap-3">
       <div class="flex items-center gap-2">
         <img src="maskot1.jpeg" class="w-9 h-9 rounded object-cover shadow-purple-glow" alt="mascot">
@@ -403,12 +147,9 @@
     <div class="p-5 flex-1 overflow-y-auto">
       <span class="block text-[10px] font-bold tracking-[3px] uppercase text-purple px-3 pt-4 pb-2">Menü</span>
       <ul class="flex flex-col gap-1">
-        <li><a href="index.html" class="flex items-center gap-3 px-3 py-3 rounded-lg text-[15px] font-medium text-white/85 hover:bg-purple/10 hover:text-purple-light hover:border hover:border-purple/20 border border-transparent transition-all">
-          <svg width="16" height="16" fill="none" stroke="currentColor" class="text-purple flex-shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Ana Sayfa</a></li>
-        <li><a href="haberler.html" class="flex items-center gap-3 px-3 py-3 rounded-lg text-[15px] font-medium text-white/85 hover:bg-purple/10 hover:text-purple-light hover:border hover:border-purple/20 border border-transparent transition-all">
-          <svg width="16" height="16" fill="none" stroke="currentColor" class="text-purple flex-shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>Haberler</a></li>
-        <li><a href="admin.html" class="flex items-center gap-3 px-3 py-3 rounded-lg text-[15px] font-medium text-white/85 hover:bg-purple/10 hover:text-purple-light hover:border hover:border-purple/20 border border-transparent transition-all">
-          <svg width="16" height="16" fill="none" stroke="currentColor" class="text-purple flex-shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Adminler</a></li>
+        <li><a href="index.html" class="flex items-center gap-3 px-3 py-3 rounded-lg text-[15px] font-medium text-white/85 hover:bg-purple/10 hover:text-purple-light hover:border hover:border-purple/20 border border-transparent transition-all"><svg width="16" height="16" fill="none" stroke="currentColor" class="text-purple flex-shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Ana Sayfa</a></li>
+        <li><a href="haberler.html" class="flex items-center gap-3 px-3 py-3 rounded-lg text-[15px] font-medium text-white/85 hover:bg-purple/10 hover:text-purple-light hover:border hover:border-purple/20 border border-transparent transition-all"><svg width="16" height="16" fill="none" stroke="currentColor" class="text-purple flex-shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>Haberler</a></li>
+        <li><a href="admin.html" class="flex items-center gap-3 px-3 py-3 rounded-lg text-[15px] font-medium text-white/85 hover:bg-purple/10 hover:text-purple-light hover:border hover:border-purple/20 border border-transparent transition-all"><svg width="16" height="16" fill="none" stroke="currentColor" class="text-purple flex-shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Adminler</a></li>
       </ul>
     </div>
     <div class="p-4 border-t border-purple/20 flex flex-col gap-2">
@@ -418,8 +159,7 @@
   </aside>
 
   <!-- NAVBAR -->
-  <nav class="fixed top-0 left-0 right-0 z-[1000] h-16 flex items-center border-b border-purple/20"
-    style="background:rgba(0,0,0,0.85);backdrop-filter:blur(20px) saturate(180%)">
+  <nav class="fixed top-0 left-0 right-0 z-[1000] h-16 flex items-center border-b border-purple/20" style="background:rgba(0,0,0,0.85);backdrop-filter:blur(20px) saturate(180%)">
     <div class="w-full max-w-[1280px] mx-auto px-5 flex items-center gap-4">
       <button id="hamburger" class="hamburger w-[38px] h-[38px] flex flex-col justify-center items-center gap-[5px] rounded hover:bg-white/5 transition-all flex-shrink-0">
         <span class="block w-5 h-[2px] bg-white rounded transition-all"></span>
@@ -427,10 +167,10 @@
         <span class="block w-5 h-[2px] bg-white rounded transition-all"></span>
       </button>
       <a href="index.html" class="flex items-center gap-2 flex-shrink-0">
-        <span class="font-display text-[15px] font-bold tracking-[2px] uppercase text-white">Manga <span class="text-purple ml-1">Moe</span></span>
+        <span class="logo-text font-display text-[15px] font-bold tracking-[2px] uppercase text-white max-[480px]:flex sm:flex">Manga <span class="text-purple ml-1">Moe</span></span>
       </a>
       <!-- Desktop search -->
-      <div class="hide-mobile flex-1 max-w-[420px] mx-auto relative">
+      <div class="nav-search hide-mobile flex-1 max-w-[420px] mx-auto relative">
         <svg width="15" height="15" fill="none" stroke="currentColor" class="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         <input type="text" placeholder="Manga ara..." class="w-full h-[38px] bg-white/5 border border-purple/20 rounded-pill pl-10 pr-4 text-white font-body text-sm outline-none focus:border-purple focus:bg-purple/5 focus:ring-2 focus:ring-purple/15 placeholder:text-white/50 transition-all">
       </div>
@@ -446,101 +186,61 @@
   </nav>
 
   <!-- Mobile search bar -->
-  <div class="mobile-search-bar fixed top-16 left-0 right-0 px-4 py-3 border-b border-purple/20 z-[999]"
-    style="background:rgba(5,0,8,0.97);backdrop-filter:blur(20px)">
+  <div class="mobile-search-bar fixed top-16 left-0 right-0 px-4 py-3 border-b border-purple/20 z-[999]" style="background:rgba(5,0,8,0.97);backdrop-filter:blur(20px)">
     <input type="text" placeholder="Manga ara..." class="w-full h-[42px] bg-white/5 border border-purple/20 rounded-pill px-4 text-white font-body text-[15px] outline-none focus:border-purple focus:bg-purple/5 placeholder:text-white/50">
   </div>
 
-  <!-- ══════════════════════════════════
-       HERO SLIDER (navbar altına yapışık)
-  ══════════════════════════════════ -->
-  <div style="padding-top:64px">
-    <div class="hero-slider" id="heroSlider">
+  <!-- HERO SLIDER -->
+  <div class="hero-slider" id="heroSlider">
+    <!-- PAUSE ICON -->
+    <div class="pause-icon">⏸</div>
 
-      <!-- Slide count -->
-      <div class="hs-count">
-        <span class="cur" id="hsCur">1</span>
-        <span> / </span>
-        <span id="hsTotal">5</span>
-      </div>
+    <!-- SLIDE COUNT -->
+    <div class="slide-count">
+      <span class="current" id="countCurrent">1</span>
+      <span> / </span>
+      <span id="countTotal">5</span>
+    </div>
 
-      <!-- Progress bar -->
-      <div class="hs-progress" id="hsProgress"></div>
+    <!-- PROGRESS BAR -->
+    <div class="progress-bar" id="progressBar"></div>
 
-      <!-- Slides – JS ile doldurulur -->
-      <div id="hsSlides"></div>
+    <!-- SLIDES WRAPPER -->
+    <div id="slidesWrapper"></div>
 
-      <!-- Dots -->
-      <div class="hs-dots" id="hsDots"></div>
+    <!-- DOTS -->
+    <div class="slider-dots" id="sliderDots"></div>
 
-      <!-- Arrow controls -->
-      <div class="hs-controls">
-        <button class="hs-ctrl" id="hsPrev" aria-label="Önceki">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10 3L5 8L10 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="hs-ctrl" id="hsNext" aria-label="Sonraki">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3L11 8L6 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-
-    </div><!-- /hero-slider -->
+    <!-- ARROW CONTROLS -->
+    <div class="slider-controls">
+      <button class="ctrl-btn" id="btnPrev" aria-label="Önceki">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 3L5 8L10 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="ctrl-btn" id="btnNext" aria-label="Sonraki">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M6 3L11 8L6 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       SON HABERLER SECTION
-  ══════════════════════════════════ -->
-  <section class="son-haberler">
-    <div class="son-haberler-header">
-      <h2 class="son-haberler-title">Son <span>Haberler</span></h2>
-      <a href="haberler.html" class="son-haberler-all">Tüm Haberler →</a>
-    </div>
-    <!-- Haber kartları grid – JS doldurur -->
-    <div class="haber-grid" id="anaSayfaHaberler">
-      <!-- Skeleton placeholders -->
-      <div class="haber-kart-skeleton">
-        <div class="sk" style="aspect-ratio:16/9;width:100%"></div>
-        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-          <div class="sk" style="height:18px;width:85%"></div>
-          <div class="sk" style="height:12px;width:100%"></div>
-          <div class="sk" style="height:12px;width:70%"></div>
-        </div>
+  <!-- COMING SOON -->
+  <section class="flex items-center justify-center text-center relative overflow-hidden px-4 py-12">
+    <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(168,85,247,0.12) 0%,transparent 70%);pointer-events:none"></div>
+    <div class="relative z-10">
+      <div class="mascot-ring relative w-[120px] h-[120px] mx-auto mb-8 rounded-full border-2 border-dashed border-purple/20 flex items-center justify-center overflow-hidden"
+        style="background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(124,58,237,0.1))">
+        <img src="maskot1.jpeg" class="w-full h-full object-cover rounded-full" alt="Manga Moe Maskot">
       </div>
-      <div class="haber-kart-skeleton">
-        <div class="sk" style="aspect-ratio:16/9;width:100%"></div>
-        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-          <div class="sk" style="height:18px;width:80%"></div>
-          <div class="sk" style="height:12px;width:100%"></div>
-          <div class="sk" style="height:12px;width:65%"></div>
-        </div>
-      </div>
-      <div class="haber-kart-skeleton">
-        <div class="sk" style="aspect-ratio:16/9;width:100%"></div>
-        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-          <div class="sk" style="height:18px;width:75%"></div>
-          <div class="sk" style="height:12px;width:100%"></div>
-          <div class="sk" style="height:12px;width:60%"></div>
-        </div>
-      </div>
-      <div class="haber-kart-skeleton">
-        <div class="sk" style="aspect-ratio:16/9;width:100%"></div>
-        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-          <div class="sk" style="height:18px;width:90%"></div>
-          <div class="sk" style="height:12px;width:100%"></div>
-          <div class="sk" style="height:12px;width:55%"></div>
-        </div>
-      </div>
-      <div class="haber-kart-skeleton">
-        <div class="sk" style="aspect-ratio:16/9;width:100%"></div>
-        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-          <div class="sk" style="height:18px;width:78%"></div>
-          <div class="sk" style="height:12px;width:100%"></div>
-          <div class="sk" style="height:12px;width:68%"></div>
-        </div>
-      </div>
+      <h2 class="font-display text-[clamp(20px,4vw,36px)] font-black tracking-[4px] uppercase text-white mb-4">
+        Manga <span class="text-purple" style="text-shadow:0 0 16px #a855f7">Moe</span> Yakında Açılıyor
+      </h2>
+      <p class="text-base text-white/50 max-w-[500px] mx-auto leading-[1.7]">
+        Türkiye'nin en kapsamlı manga okuma platformu çok yakında sizlerle!
+        Tüm gelişmeleri takip etmek için bizi izlemeye devam edin.
+      </p>
     </div>
   </section>
 
@@ -558,10 +258,8 @@
   </footer>
 
   <!-- MODAL -->
-  <div id="modal-overlay" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center p-5"
-    style="background:rgba(0,0,0,0.85);backdrop-filter:blur(8px)">
-    <div class="modal-box w-full max-w-[400px] rounded-xl border border-purple/20 overflow-hidden"
-      style="background:linear-gradient(160deg,#0a0014 0%,#050008 100%);box-shadow:0 0 60px rgba(168,85,247,0.2),0 40px 80px rgba(0,0,0,0.6)">
+  <div id="modal-overlay" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center p-5" style="background:rgba(0,0,0,0.85);backdrop-filter:blur(8px)">
+    <div class="modal-box w-full max-w-[400px] rounded-xl border border-purple/20 overflow-hidden" style="background:linear-gradient(160deg,#0a0014 0%,#050008 100%);box-shadow:0 0 60px rgba(168,85,247,0.2),0 40px 80px rgba(0,0,0,0.6)">
       <div class="flex justify-end p-6 pb-0">
         <button id="modal-close" class="w-8 h-8 flex items-center justify-center rounded text-white/50 hover:bg-white/5 hover:text-white transition-all">
           <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -577,240 +275,6 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       JAVASCRIPT
-  ══════════════════════════════════ -->
-  <script>
-  /* ── YARDIMCI ── */
-  function formatDate(dateStr) {
-    return new Date(dateStr).toLocaleDateString('tr-TR', { day:'2-digit', month:'short', year:'numeric' });
-  }
-
-  /* ── DATA FETCH ── */
-  async function fetchNews() {
-    try {
-      const res = await fetch('data.json');
-      if (!res.ok) throw new Error('fetch fail');
-      const data = await res.json();
-      // En yüksek ID = en yeni → büyükten küçüğe sırala
-      return data.sort((a, b) => b.id - a.id);
-    } catch(e) {
-      console.error('data.json yüklenemedi:', e);
-      return [];
-    }
-  }
-
-  /* ══════════════════════════════
-     HERO SLIDER
-  ══════════════════════════════ */
-  function initHeroSlider(news) {
-    const slides    = news.slice(0, 5);   // En yeni 5 haber
-    const container = document.getElementById('hsSlides');
-    const dotsWrap  = document.getElementById('hsDots');
-    const bar       = document.getElementById('hsProgress');
-    const cCur      = document.getElementById('hsCur');
-    const cTot      = document.getElementById('hsTotal');
-    const btnPrev   = document.getElementById('hsPrev');
-    const btnNext   = document.getElementById('hsNext');
-    const sliderEl  = document.getElementById('heroSlider');
-
-    if (!container || !slides.length) return;
-
-    cTot.textContent = slides.length;
-
-    /* Render slides */
-    container.innerHTML = slides.map((item, i) => `
-      <div class="hs-slide${i===0?' active':''}" data-index="${i}">
-        <div class="hs-bg" style="background-image:url('${item.image}')"></div>
-        <div class="hs-overlay"></div>
-        <div class="hs-badge">✦ Öne Çıkan</div>
-        <div class="hs-content">
-          <div class="hs-tag"><span class="blink"></span>Son Haber</div>
-          <h2 class="hs-title">${item.title.length > 55
-            ? item.title.substring(0,55)+'…'
-            : item.title.replace(/:(.+)$/, ':<span>$1</span>')
-          }</h2>
-          <p class="hs-desc">${item.desc}</p>
-          <div class="hs-actions">
-            <a href="haber-detay.html?id=${item.id}" class="hs-btn hs-btn-primary">
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-              Haberi Oku
-            </a>
-            <a href="haberler.html" class="hs-btn hs-btn-ghost">Tüm Haberler</a>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    /* Render dots */
-    dotsWrap.innerHTML = slides.map((_, i) =>
-      `<button class="hs-dot${i===0?' active':''}" data-i="${i}" aria-label="Slide ${i+1}"></button>`
-    ).join('');
-    dotsWrap.querySelectorAll('.hs-dot').forEach(d =>
-      d.addEventListener('click', () => { elapsed=0; goTo(parseInt(d.dataset.i)); })
-    );
-
-    /* State */
-    let current=0, timer=null, paused=false, startTime, elapsed=0;
-    const INTERVAL = 5500;
-
-    function getAllSlides() { return container.querySelectorAll('.hs-slide'); }
-    function getAllDots()   { return dotsWrap.querySelectorAll('.hs-dot'); }
-
-    function goTo(next) {
-      if (next === current) return;
-      const sl = getAllSlides(), dt = getAllDots();
-      sl[current].classList.remove('active');
-      sl[current].classList.add('exit');
-      setTimeout(() => sl[current].classList.remove('exit'), 700);
-      sl[next].classList.add('active');
-      dt[current]?.classList.remove('active');
-      dt[next]?.classList.add('active');
-      current = next;
-      cCur.textContent = current + 1;
-      resetProg(); startProg();
-    }
-
-    function next() { goTo((current+1) % slides.length); }
-    function prev() { goTo((current-1+slides.length) % slides.length); }
-
-    function startProg() {
-      startTime = performance.now() - elapsed;
-      bar.style.transition = `width ${(INTERVAL-elapsed)/1000}s linear`;
-      bar.style.width = '100%';
-      clearTimeout(timer);
-      timer = setTimeout(() => { elapsed=0; next(); }, INTERVAL - elapsed);
-    }
-    function pauseProg() {
-      elapsed = performance.now() - startTime;
-      clearTimeout(timer);
-      bar.style.transition = 'none';
-      bar.style.width = ((elapsed/INTERVAL)*100) + '%';
-    }
-    function resetProg() {
-      elapsed=0; clearTimeout(timer);
-      bar.style.transition='none'; bar.style.width='0%';
-    }
-
-    btnNext.addEventListener('click', () => { elapsed=0; next(); });
-    btnPrev.addEventListener('click', () => { elapsed=0; prev(); });
-
-    sliderEl.addEventListener('mouseenter', () => { if(!paused){paused=true;pauseProg();} });
-    sliderEl.addEventListener('mouseleave', () => { if(paused){paused=false;startProg();} });
-
-    let tx=0;
-    sliderEl.addEventListener('touchstart', e => { tx=e.touches[0].clientX; paused=true; pauseProg(); }, {passive:true});
-    sliderEl.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - tx;
-      paused=false;
-      if (Math.abs(dx)>40) { elapsed=0; dx<0 ? next() : prev(); }
-      else startProg();
-    }, {passive:true});
-
-    document.addEventListener('keydown', e => {
-      if (e.key==='ArrowRight') { elapsed=0; next(); }
-      if (e.key==='ArrowLeft')  { elapsed=0; prev(); }
-    });
-
-    startProg();
-  }
-
-  /* ══════════════════════════════
-     ANA SAYFA HABER KARTLARI (son 5)
-  ══════════════════════════════ */
-  function renderAnaSayfaHaberler(news) {
-    const grid = document.getElementById('anaSayfaHaberler');
-    if (!grid) return;
-
-    const son5 = news.slice(0, 5); // ID'ye göre sıralı geldi, en yeni 5
-    grid.innerHTML = '';
-
-    son5.forEach((item, i) => {
-      const kart = document.createElement('article');
-      kart.className = 'haber-kart';
-      kart.style.animationDelay = `${i * 0.08}s`;
-      kart.innerHTML = `
-        <div class="haber-kart-img">
-          <img src="${item.image}" alt="${item.title}" loading="lazy">
-          <div class="haber-kart-img-overlay"></div>
-          <div class="haber-kart-tarih-badge">${formatDate(item.date)}</div>
-        </div>
-        <div class="haber-kart-body">
-          <h3 class="haber-kart-baslik">${item.title}</h3>
-          <p class="haber-kart-desc">${item.desc}</p>
-          <div class="haber-kart-footer">
-            <span class="haber-kart-date">
-              <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              ${formatDate(item.date)}
-            </span>
-            <a href="haber-detay.html?id=${item.id}" class="haber-kart-btn">Devamını Oku</a>
-          </div>
-        </div>
-      `;
-      /* Karta tıklama – buton hariç */
-      kart.addEventListener('click', e => {
-        if (!e.target.closest('.haber-kart-btn')) {
-          window.location.href = `haber-detay.html?id=${item.id}`;
-        }
-      });
-      grid.appendChild(kart);
-    });
-  }
-
-  /* ══════════════════════════════
-     MODAL
-  ══════════════════════════════ */
-  function initModal() {
-    const overlay   = document.getElementById('modal-overlay');
-    const triggers  = document.querySelectorAll('.modal-trigger');
-    const closeBtn  = document.getElementById('modal-close');
-    const closeFoot = document.getElementById('modal-close-footer');
-    if (!overlay) return;
-    const open  = () => { overlay.classList.add('open'); document.body.style.overflow='hidden'; };
-    const close = () => { overlay.classList.remove('open'); document.body.style.overflow=''; };
-    triggers.forEach(b => b.addEventListener('click', open));
-    closeBtn?.addEventListener('click', close);
-    closeFoot?.addEventListener('click', close);
-    overlay.addEventListener('click', e => { if(e.target===overlay) close(); });
-    document.addEventListener('keydown', e => { if(e.key==='Escape') close(); });
-  }
-
-  /* ══════════════════════════════
-     DRAWER
-  ══════════════════════════════ */
-  function initDrawer() {
-    const hamburger = document.getElementById('hamburger');
-    const drawer    = document.getElementById('drawer');
-    const overlay   = document.getElementById('drawer-overlay');
-    const closeBtn  = document.getElementById('drawer-close');
-    if (!hamburger || !drawer) return;
-    const open  = () => { drawer.classList.add('open'); overlay?.classList.add('open'); hamburger.classList.add('active'); document.body.style.overflow='hidden'; };
-    const close = () => { drawer.classList.remove('open'); overlay?.classList.remove('open'); hamburger.classList.remove('active'); document.body.style.overflow=''; };
-    hamburger.addEventListener('click', open);
-    overlay?.addEventListener('click', close);
-    closeBtn?.addEventListener('click', close);
-    document.addEventListener('keydown', e => { if(e.key==='Escape') close(); });
-  }
-
-  /* ══════════════════════════════
-     INIT
-  ══════════════════════════════ */
-  document.addEventListener('DOMContentLoaded', async () => {
-    initModal();
-    initDrawer();
-    const news = await fetchNews();
-    if (news.length) {
-      initHeroSlider(news);
-      renderAnaSayfaHaberler(news);
-    }
-  });
-  </script>
-
-  <!-- Diğer script.js işlevleri (search vb.) -->
   <script src="script.js"></script>
 </body>
 </html>
